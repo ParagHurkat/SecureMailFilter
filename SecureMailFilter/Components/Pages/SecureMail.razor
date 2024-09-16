@@ -1,0 +1,29 @@
+﻿@page "/securemail"
+@using System.Text.RegularExpressions
+@rendermode InteractiveServer
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<textarea rows="15" cols="60" @bind="inputText"></textarea>
+<button class="btn btn-primary" @onclick="StripSourceLines">Click me</button>
+<textarea rows="15" cols="60" @bind="outputText"></textarea>
+
+@code {
+    private int currentCount = 0;
+    private string inputText = "";
+    private string outputText = "";
+    private void StripSourceLines()
+    {
+        string pattern = @"\s*\[.*?\]";
+
+        // Replace source lines with an empty string
+        string result = Regex.Replace(inputText, pattern, string.Empty);
+
+        outputText= result;
+    }
+
+}
