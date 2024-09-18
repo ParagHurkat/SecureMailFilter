@@ -1,9 +1,19 @@
 ﻿using System;
 using System.Text.RegularExpressions;
+using Azure.AI.TextAnalytics;
+using Azure.AI;
+using Azure;
+using Microsoft.Azure.CognitiveServices.Language.TextAnalytics.Models;
+using System.Runtime.InteropServices;
 
 class Program
 {
-	static void Main()
+
+    
+    static void Main()
+
+
+
 	{
 		string inputText = @"
 0:000> k
@@ -18,20 +28,68 @@ class Program
 07 0000006c`1227fcb0 00007ff9`f35b1791     kernel32!BaseThreadInitThunk+0x14 [d:\rs1\base\win32\client\thread.c @ 64]
 08 0000006c`1227fce0 00000000`00000000     ntdll!RtlUserThreadStart+0x21 [d:\rs1\minkernel\ntdll\rtlstrt.c @ 997]
 Some normal text that should not be removed.
+
+Visit Microsoft at https://www.microsoft.com
+
+but check out this non-Microsoft link instead: https://www.example.com
+
 ";
 
-		string outputText = StripSourceLines(inputText);
+        //string endpoint = "<YOUR_TEXT_ANALYTICS_ENDPOINT>";
+        //string apiKey = "<YOUR_TEXT_ANALYTICS_API_KEY>";
+
+		
+        //AzureKeyCredential credential = new AzureKeyCredential(apiKey);
+
+        //var credentials = new ApiKeyServiceClientCredentials(apiKey);
+        //var client = new TextAnalyticsClient(credentials)
+        //{
+        //    Endpoint = endpoint
+        //};
+
+
+        string outputText = StripSourceLines(inputText);
 		Console.WriteLine(outputText);
 	}
 
 	static string StripSourceLines(string inputText)
 	{
-		// Regular expression to match source lines
-		string pattern = @"\s*\[.*?\]";
+
+        string endpoint = "https://paragaiservice.cognitiveservices.azure.com/";
+        string apiKey = "b70652227398482a81cde45c35c0b190";
+
+        var credential = new AzureKeyCredential(apiKey);
+        var client = new TextAnalyticsClient(new Uri(endpoint), credential);
+
+        // Regular expression to match source lines
+        string pattern = @"\s*\[.*?\]";
 
 		// Replace source lines with an empty string
 		string result = Regex.Replace(inputText, pattern, string.Empty);
 
-		return result;
+        var documents = new List<TextDocumentInput>()
+        {
+            new TextDocumentInput("1", result)
+            {
+                Language = "en"
+            }
+        };
+
+        var finalResult = client.RecognizeEntitiesBatch(documents);
+
+        var nonMicrosoftLinks = finalResult.Value.FirstOrDefault()?.Entities
+            .Where(e => e.Category == EntityCategory.Url)
+            .Select(e => e.Text)
+            .Where(url => !url.Contains("microsoft.com"))
+            .ToList();
+
+
+
+        foreach (var link in nonMicrosoftLinks)
+        {
+            Console.WriteLine(link);
+        }
+
+        return result;
 	}
 }
