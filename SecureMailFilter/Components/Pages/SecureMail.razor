@@ -5,23 +5,90 @@
 @using Azure;
 @rendermode InteractiveServer
 
-<PageTitle>Counter</PageTitle>
+@inject IDialogService DialogService
+<PageTitle>SecureEmail</PageTitle>
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
+<FluentWizard @ref="@wizard"
+              StepperPosition="@StepperPosition.Top"
+              StepSequence="@WizardStepSequence.Linear"
+              DisplayStepNumber="@(WizardStepStatus.Current | WizardStepStatus.Next)"
+              Border="WizardBorder.None"
+              StepTitleHiddenWhen="@GridItemHidden.XsAndDown"
+              Height="100%"
+              OnFinish="@OnFinishedAsync">
 
-<textarea rows="15" cols="60" @bind="inputText"></textarea>
+               <Steps>
+        <FluentWizardStep Label="Email Details"
+                          OnChange="@OnStepChange">
+            <FluentEditForm Model="emailDetails" FormName="emailDetails" OnValidSubmit="OnValidSubmit">
+            <FluentStack Orientation="Orientation.Vertical"
+                         HorizontalAlignment="@HorizontalAlignment.Center"
+                         VerticalGap="20">
+                <DataAnnotationsValidator />
+                <h2 style="margin-top:5%">We help you secure the emails you send to the customers</h2>
+                <h5>Please enter the email you would want to verify</h5>
+                    <FluentTextArea @bind-Value="inputText" AriaLabel="Without label" Rows="15" Cols="60"></FluentTextArea>
+                <FluentValidationSummary style="color:darkred" />
+            </FluentStack>
+            </FluentEditForm>
+        </FluentWizardStep>
+        <FluentWizardStep Label="Filtering"
+                          Summary="Making sure you do not send source lines to the customer"
+                          OnChange="@OnStepChange">
+             <FluentStack Orientation="Orientation.Horizontal">
+            <h7>Here is your filtered email :)</h7>
+            <FluentTextArea @bind-Value="outputText" AriaLabel="Without label" Rows="15" Cols="60"></FluentTextArea>
+            <h7>Here are the Non MS links you had in your email</h7>
+            <FluentTextArea @bind-Value="nonMSText" AriaLabel="Without label" Rows="15" Cols="60"></FluentTextArea>
+            </FluentStack>
+        </FluentWizardStep>
+        </Steps>
+
+              </FluentWizard>
+
+<FluentOverlay @bind-Visible=@_overlayIsVisible
+               Opacity="0.4"
+               Alignment="Align.Center"
+               Justification="@JustifyContent.Center">
+    <FluentProgressRing />
+</FluentOverlay>
+
+@* <textarea rows="15" cols="60" @bind="inputText"></textarea> *@
 @* <button class="btn btn-primary" @onclick="StripSourceLines">Click me</button> *@
-<FluentButton Appearance="@Appearance.Accent" @onclick="StripSourceLines">Click Me</FluentButton>
-<textarea rows="15" cols="60" @bind="outputText"></textarea>
-<textarea rows="15" cols="60" @bind="nonMSText"></textarea>
+@* <FluentButton Appearance="@Appearance.Accent" @onclick="StripSourceLines">Click Me</FluentButton> *@
+@* <textarea rows="15" cols="60" @bind="outputText"></textarea> *@
+@* <textarea rows="15" cols="60" @bind="nonMSText"></textarea> *@
 
 @code {
+    EmailModel emailDetails = new();
     private int currentCount = 0;
     private string inputText = "";
     private string outputText = "";
     private String nonMSText = "";
+
+    FluentWizard wizard = default!;
+    private bool _overlayIsVisible = false;
+
+    async Task OnFinishedAsync()
+    {
+        await DialogService.ShowInfoAsync("Wizard completed");
+    }
+
+    void OnStepChange(FluentWizardStepChangeEventArgs e)
+    {
+
+    }
+
+    async Task OnValidSubmit()
+    {
+        _overlayIsVisible = true;
+        await Task.Delay(3000);
+        _overlayIsVisible = false;
+        StripSourceLines();
+    }
+    
     private void StripSourceLines()
     {
 
