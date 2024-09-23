@@ -6,6 +6,7 @@
 @rendermode InteractiveServer
 
 @inject IDialogService DialogService
+
 <PageTitle>SecureEmail</PageTitle>
 
 <h1>Counter</h1>
@@ -47,6 +48,8 @@
         </Steps>
 
               </FluentWizard>
+<FluentDialogProvider />
+              
 
 <FluentOverlay @bind-Visible=@_overlayIsVisible
                Opacity="0.4"
@@ -74,6 +77,9 @@
     async Task OnFinishedAsync()
     {
         await DialogService.ShowInfoAsync("Wizard completed");
+        inputText = "";
+    outputText = "";
+    nonMSText = "";
     }
 
     void OnStepChange(FluentWizardStepChangeEventArgs e)
